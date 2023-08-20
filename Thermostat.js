@@ -13,10 +13,15 @@ let CONFIG = {
 let deviceInfo=Shelly.getDeviceInfo();
 let deviceid=deviceInfo.id;
 print ("Device ID: "deviceid);
-MQTT.publish(deviceid+"/TempSetpoint", JSON.stringify(CONFIG.setpoint),0,true);
-MQTT.publish(deviceid+"/TempDeadband", JSON.stringify(CONFIG.deadband),0,true);
-MQTT.publish(deviceid+"/TempSensor", JSON.stringify(CONFIG.sensor),0,true);
-MQTT.publish(deviceid+"/ThermostatControl", JSON.stringify(CONFIG.thermostat),0,true);
+let setpointTopic = deviceid+"/TempSetpoint";
+let deadbandTopic = deviceid+"/TempDeadband";
+let sensorTopic = deviceid+"/TempSensor";
+let thermostatTopic = deviceid+"/ThermostatControl";
+let uptimeTopic=deviceid+"/uptime";
+MQTT.publish(setpointTopic, JSON.stringify(CONFIG.setpoint),0,true);
+MQTT.publish(deadbandTopic, JSON.stringify(CONFIG.deadband),0,true);
+MQTT.publish(sensorTopic, JSON.stringify(CONFIG.sensor),0,true);
+MQTT.publish(thermostatTopic, JSON.stringify(CONFIG.thermostat),0,true);
 
 function callback(userdata) {
   Shelly.call("temperature.getStatus",{ id: CONFIG.sensor },function (response) {
@@ -42,7 +47,9 @@ function callback(userdata) {
    },
 null
 );
-
+   let uptime = Shelly.getComponentStatus("sys").uptime;
+   MQTT.publish(uptimeTopic, JSON.stringify(uptime), 0, true);
+   
 }
 
 function mqttsetpoint(topic, message, userdata){
@@ -73,9 +80,9 @@ print ("Thermostat: "+message);
 
 
 
-MQTT.subscribe(deviceid+"/TempSetpoint", mqttsetpoint);
-MQTT.subscribe(deviceid+"/TempDeadband", mqttdeadband);
-MQTT.subscribe(deviceid+"/TempSensor", mqttsensor);
-MQTT.subscribe(deviceid+"/ThermostatControl", mqttthermostat);
+MQTT.subscribe(setpointTopic, mqttsetpoint);
+MQTT.subscribe(deadbandTopic, mqttdeadband);
+MQTT.subscribe(sensorTopic, mqttsensor);
+MQTT.subscribe(thermostatTopic, mqttthermostat);
 
 let time_handle=Timer.set(CONFIG.timeMs,true,callback,null);
