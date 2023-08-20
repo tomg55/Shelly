@@ -5,19 +5,22 @@
 };
 let deviceInfo=Shelly.getDeviceInfo();
 let deviceid=deviceInfo.id;
-let switchOff = deviceid+"/switchOff";
+let uptimeTopic = deviceid+"/uptime";
 let switchOn = deviceid+"/switchOn";
-let switchToggle = deviceid+"/switchToggle";
+
 
 print (deviceid);
 function callback(userdata) {
-  if (CONFIG.input){
-      Shelly.call("Input.GetStatus",{id:0},function (val) {CONFIG.input=(val.state);});
-    Shelly.call("Switch.Set",{ id: 0, on: CONFIG.state });
+   Shelly.call("Input.GetStatus",{id:0},function (val) {CONFIG.input=(val.state);});
+   if (CONFIG.input){ 
+      Shelly.call("Switch.Set",{ id: 0, on: CONFIG.state });
     }
-  else{
-    Shelly.call("Switch.Set",{ id: 0, on: false });
-  }
+   else{
+      Shelly.call("Switch.Set",{ id: 0, on: false });
+   }
+   let uptime = Shelly.getComponentStatus("sys").uptime;
+   MQTT.publish(uptimeTopic, JSON.stringify(uptime), 0, true);
+   
 }
 
 
