@@ -1,7 +1,7 @@
 let CONFIG = {
   deadband: 0.1,
-  setpoint: 70,
-  timeMs:1000,
+  setpoint: 99.5,
+  timeMs:500,
   sensor: 100,
   sensorMax: 102,
   sensorMin: 100,
@@ -17,17 +17,23 @@ let setpointTopic = deviceid+"/TempSetpoint";
 let deadbandTopic = deviceid+"/TempDeadband";
 let sensorTopic = deviceid+"/TempSensor";
 let thermostatTopic = deviceid+"/ThermostatControl";
+let inputid= deviceid+ "/status/input:0/id";
+let inputstate= deviceid+ "/status/input:0/state";
 let uptimeTopic=deviceid+"/uptime";
 MQTT.publish(setpointTopic, JSON.stringify(CONFIG.setpoint),0,true);
 MQTT.publish(deadbandTopic, JSON.stringify(CONFIG.deadband),0,true);
 MQTT.publish(sensorTopic, JSON.stringify(CONFIG.sensor),0,true);
 MQTT.publish(thermostatTopic, JSON.stringify(CONFIG.thermostat),0,true);
-
+MQTT.publish(inputstate, JSON.stringify(!CONFIG.input),0,true);
 function callback(userdata) {
   Shelly.call("temperature.getStatus",{ id: CONFIG.sensor },function (response) {
     let temp=(response.tF);
     Shelly.call("Input.GetStatus",{id:0},function (val) {
-    CONFIG.input=(val.state);});
+    if (val.state=! null){
+     CONFIG.input=(val.state)
+     MQTT.publish(inputstate, JSON.stringify(CONFIG.input),0,true);
+    }});
+    
     if (MQTT.isConnected()){
       if (CONFIG.thermostat && CONFIG.input){
         if (temp > CONFIG.setpoint || temp>CONFIG.maxTemp){
