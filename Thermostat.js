@@ -1,3 +1,5 @@
+//Firmware 1.0.3
+
 let CONFIG = {
   deadband: 0.1,
   setpoint: 99.5,
