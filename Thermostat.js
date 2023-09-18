@@ -31,10 +31,9 @@ function callback(userdata) {
   Shelly.call("temperature.getStatus",{ id: CONFIG.sensor },function (response) {
     let temp=(response.tF);
     Shelly.call("Input.GetStatus",{id:0},function (val) {
-    if (val.state=! null){
-     CONFIG.input=(val.state)
-     MQTT.publish(inputstate, JSON.stringify(CONFIG.input),0,true);
-    }});
+      CONFIG.input=(val.state)
+      MQTT.publish(inputstate, JSON.stringify(CONFIG.input),0,true);
+    });
     if (MQTT.isConnected()){
       if (CONFIG.thermostat && CONFIG.input){
         if (temp > CONFIG.setpoint || temp>CONFIG.maxTemp){
@@ -46,14 +45,11 @@ function callback(userdata) {
         else{
           print ("Do Nothing: " + JSON.stringify(temp));}}
       else{
-         print ("Thermostat OFF");
          Shelly.call("Switch.Set",{ id: 0, on: false });}}
     else{
-      print ("MQTT LOST CONNECTION");
       Shelly.call("Switch.Set",{ id: 0, on: false });}
-   },
-null
-);
+   },null);
+   
    let uptime = Shelly.getComponentStatus("sys").uptime;
    MQTT.publish(uptimeTopic, JSON.stringify(uptime), 0, true);
    
