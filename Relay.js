@@ -14,10 +14,9 @@ MQTT.publish(inputstate, JSON.stringify(!CONFIG.input),0,true);
 print (deviceid);
 function callback(userdata) {
     Shelly.call("Input.GetStatus",{id:0},function (val) {
-    if (val.state=! null){
-     CONFIG.input=(val.state)
-     MQTT.publish(inputstate, JSON.stringify(CONFIG.input),0,true);
-    }});
+      CONFIG.input=(val.state)
+      MQTT.publish(inputstate, JSON.stringify(CONFIG.input),0,true);
+    });
    if (CONFIG.input){ 
       Shelly.call("Switch.Set",{ id: 0, on: CONFIG.state });
     }
