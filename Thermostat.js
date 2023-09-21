@@ -31,8 +31,9 @@ function callback(userdata) {
   Shelly.call("temperature.getStatus",{ id: CONFIG.sensor },function (response) {
     let temp=(response.tF);
     Shelly.call("Input.GetStatus",{id:0},function (val) {
-      CONFIG.input=(val.state)
-      MQTT.publish(inputstate, JSON.stringify(CONFIG.input),0,true);
+      state=val.state;
+      CONFIG.input=(state);
+      MQTT.publish(inputstate, JSON.stringify(state),0,true);
     });
     if (MQTT.isConnected()){
       if (CONFIG.thermostat && CONFIG.input){
@@ -48,11 +49,9 @@ function callback(userdata) {
          Shelly.call("Switch.Set",{ id: 0, on: false });}}
     else{
       Shelly.call("Switch.Set",{ id: 0, on: false });}
-   },null);
-   
-   let uptime = Shelly.getComponentStatus("sys").uptime;
-   MQTT.publish(uptimeTopic, JSON.stringify(uptime), 0, true);
-   
+  },null);
+  let uptime = Shelly.getComponentStatus("sys").uptime;
+  MQTT.publish(uptimeTopic, JSON.stringify(uptime), 0, true);   
 }
 
 function mqttsetpoint(topic, message, userdata) {
