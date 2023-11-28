@@ -1,15 +1,17 @@
 //Firmware 1.0.3
-
 let CONFIG = {
   deadband: 0.1,
-  setpoint: 99.5,
+  setpoint: 30,
   timeMs:500,
   sensor: 100,
   sensorMax: 102,
   sensorMin: 100,
   thermostat: 1,
-  maxTemp: 105,
-  input: true
+  maxTemp: 150,
+  minTemp: 0,
+  input: true,
+  temp0: 150,
+  temp1: 150
 };
 
 let deviceInfo=Shelly.getDeviceInfo();
@@ -21,6 +23,7 @@ let sensorTopic = deviceid+"/TempSensor";
 let thermostatTopic = deviceid+"/ThermostatControl";
 let inputid= deviceid+ "/status/input:0/id";
 let inputstate= deviceid+ "/status/input:0/state";
+let outputTopic= deviceid+ "/status/switch:0/output";
 let uptimeTopic=deviceid+"/uptime";
 MQTT.publish(setpointTopic, JSON.stringify(CONFIG.setpoint),0,true);
 MQTT.publish(deadbandTopic, JSON.stringify(CONFIG.deadband),0,true);
@@ -35,20 +38,45 @@ function callback(userdata) {
       CONFIG.input=(state);
       MQTT.publish(inputstate, JSON.stringify(state),0,true);
     });
+    if (CONFIG.sensor==100){
+      let tid1=101;
+      let tid2=102;
+    }
+    else if (CONFIG.sensor==101){
+      let tid1=100;
+      let tid2=102;
+    }
+    else if (CONFIG.sensor==102){
+      let tid1=100;
+      let tid2=101;
+    }
+    Shelly.call("temperature.getStatus",{ id: tid1 },function (response) {
+      CONFIG.temp0=(response.tF);
+      },null);
+    Shelly.call("temperature.getStatus",{ id: tid2},function (response) {
+      CONFIG.temp1=(response.tF);
+      },null);
+
     if (MQTT.isConnected()){
-      if (CONFIG.thermostat && CONFIG.input){
-        if (temp < CONFIG.setpoint || temp<CONFIG.maxTemp){
+      if (CONFIG.thermostat && CONFIG.input){    
+        if (temp < CONFIG.setpoint || temp<CONFIG.minTemp){
           Shelly.call("Switch.Set",{ id: 0, on: false });
+          MQTT.publish(outputTopic, JSON.stringify(false),0,true);
           print ("Turn Off: " + JSON.stringify(temp));} 
-        else if (temp > (CONFIG.setpoint+CONFIG.deadband)){
+        else if (temp > (CONFIG.setpoint-CONFIG.deadband)){
           Shelly.call("Switch.Set",{ id: 0, on: true });
+          MQTT.publish(outputTopic, JSON.stringify(true),0,true);
           print ("Turn On: " + JSON.stringify(temp));}
         else{
           print ("Do Nothing: " + JSON.stringify(temp));}}
       else{
-         Shelly.call("Switch.Set",{ id: 0, on: false });}}
+         Shelly.call("Switch.Set",{ id: 0, on: false });
+         MQTT.publish(outputTopic, JSON.stringify(false),0,true);
+         }}
     else{
-      Shelly.call("Switch.Set",{ id: 0, on: false });}
+      Shelly.call("Switch.Set",{ id: 0, on: false });
+      MQTT.publish(outputTopic, JSON.stringify(false),0,true);
+      }
   },null);
   let uptime = Shelly.getComponentStatus("sys").uptime;
   MQTT.publish(uptimeTopic, JSON.stringify(uptime), 0, true);   
